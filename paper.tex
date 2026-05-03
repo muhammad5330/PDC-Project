@@ -70,9 +70,11 @@ residual: $\Delta W_{\mathrm{res}} = \frac{1}{k}\sum_i B_i A_i -
 validate exactness with a unit test ($\|W_{\mathrm{ideal}} -
 W_{\mathrm{FedEx}}\|_F = 6.38\times10^{-5}$), and evaluate across all six GLUE
 NLU sub-tasks under Dirichlet non-IID partitioning ($\alpha{=}0.3$,
-$k{=}10$ clients). FedEx-LoRA recovers up to \textbf{3.7\%} accuracy over
-FedAvg-LoRA on SST-2 and closes 94\% of the gap to centralised LoRA. We
-further characterise synchronisation-frequency effects and propose a novel
+$k{=}10$ clients). With sufficient local training ($E{=}3$), FedEx-LoRA
+recovers up to \textbf{3.7\%} accuracy over FedAvg-LoRA on SST-2 and closes
+94\% of the gap to centralised LoRA. We further characterise
+synchronisation-frequency effects---demonstrating that $E{=}3$ local epochs
+is optimal (64.1\% accuracy vs.\ 49.1\% for $E{=}1$)---and propose a novel
 SVD-based residual compression achieving 47.9\% bandwidth savings with only
 0.9\% accuracy degradation.
 \end{abstract}
@@ -395,7 +397,7 @@ confirming mathematical exactness up to floating-point precision.
 
 Fig.~\ref{fig:phase12} reports per-round aggregation bias
 $\|W_{\mathrm{ideal}}-W\|_F$ across five rounds. FedAvg-LoRA starts at
-$\epsilon=0.572$ and persists at $\epsilon=0.244$ by round 5; FedEx-LoRA
+$\epsilon=0.559$ and persists at $\epsilon=0.244$ by round 5; FedEx-LoRA
 maintains $\epsilon < 4\times10^{-5}$ throughout, confirming exact aggregation
 irrespective of local training divergence. This directly validates
 Equation~\eqref{eq:residual}.
@@ -422,11 +424,11 @@ implementation:
 \hline
 \textbf{Round} & \textbf{FedAvg-LoRA} & \textbf{FedEx-LoRA} \\
 \hline
-1 & 0.5721 & $<$1e-4 \\
-2 & 0.4712 & $<$1e-4 \\
-3 & 0.3498 & $<$1e-4 \\
-4 & 0.2973 & $<$1e-4 \\
-5 & 0.2441 & $<$1e-4 \\
+1 & 0.5590 & $3.12\times10^{-5}$ \\
+2 & 0.4785 & $3.12\times10^{-5}$ \\
+3 & 0.3516 & $3.12\times10^{-5}$ \\
+4 & 0.2974 & $3.12\times10^{-5}$ \\
+5 & 0.2440 & $3.12\times10^{-5}$ \\
 \hline
 \end{tabular}
 \end{center}
@@ -497,11 +499,11 @@ sweep $E\in\{1,3,5\}$ over three communication rounds under FedEx-LoRA.
 \end{figure}
 
 The residual norm $\|\Delta W_{\mathrm{res}}\|_F$ grows monotonically with
-$E$ (0.37 at $E{=}1$ vs.\ 1.14 at $E{=}5$ by round 3), confirming that more
+$E$ (0.350 at $E{=}1$ vs.\ 1.138 at $E{=}5$ by round 3), confirming that more
 local training increases aggregation complexity—a direct manifestation of the
 classical PDC synchronisation-communication tradeoff. In accuracy, $E{=}3$
-achieves the best final result (64.1\%) while $E{=}1$ underfits (49.1\%)
-and $E{=}5$ exhibits client-drift oscillation (62.0\%). Table~\ref{tab:epochs}
+achieves the best final result (64.11\%) while $E{=}1$ underfits (49.08\%)
+and $E{=}5$ exhibits client-drift oscillation (62.04\%). Table~\ref{tab:epochs}
 summarises the final-round values.
 
 \begin{table}[t]
@@ -512,9 +514,9 @@ summarises the final-round values.
 \hline
 \textbf{$E$} & \textbf{Val Accuracy} & \textbf{$\|\Delta W_{\mathrm{res}}\|_F$}\\
 \hline
-1 & 0.4908 & 0.37 \\
-3 & 0.6411 & 0.66 \\
-5 & 0.6204 & 1.14 \\
+1 & 0.4908 & 0.350 \\
+3 & 0.6411 & 0.664 \\
+5 & 0.6204 & 1.138 \\
 \hline
 \end{tabular}
 \end{center}
@@ -613,8 +615,10 @@ method for federated LoRA fine-tuning of LLMs. The key findings are:
         experimental data; FedEx-LoRA maintains near-zero bias throughout.
   \item FedEx-LoRA improves SST-2 accuracy by 3.7\% over FedAvg-LoRA and
         closes 94\% of the centralised gap across all six GLUE sub-tasks.
-  \item Residual norm grows monotonically with local epochs ($E$), validating
-        the PDC synchronisation-communication tradeoff. $E{=}3$ is optimal.
+  \item Residual norm grows monotonically with local epochs ($E$):
+        $0.350$ at $E{=}1$ to $1.138$ at $E{=}5$, validating the PDC
+        synchronisation-communication tradeoff. $E{=}3$ is optimal (64.11\%
+        vs.\ 49.08\% for $E{=}1$ and 62.04\% for $E{=}5$).
   \item SVD compression at $r'{=}r/2$ achieves 47.9\% bandwidth saving with
         only 0.9\% accuracy loss---a novel contribution beyond the base paper.
 \end{enumerate}
